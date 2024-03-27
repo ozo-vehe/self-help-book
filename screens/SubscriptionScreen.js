@@ -275,7 +275,7 @@ const SubscriptionScreen = ({ navigation }) => {
 
       <Paystack
         paystackKey="pk_test_f3072ef0f73e406f6f669a31617dc6f8e7a9fd86"
-        paystackSecretKey="sk_test_7143006ec0232ef14acfcd39b014ed5975b0fbd9"
+        paystackSecretKey={import.meta.env.EXPO_PUBLIC_PAYSTACK_API_KEY}
         billingEmail="johnnie.vehe@gmail.com"
         amount={"5000.00"}
         billingName="Team Artemis"
