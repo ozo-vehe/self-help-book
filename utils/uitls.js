@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 
 // Constant to hold the base url of the backend API
-const BASE_URL = "https://spitfire-interractions.onrender.com/";
 const API_KEY = process.env.EXPO_PUBLIC_API_KEY;
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 

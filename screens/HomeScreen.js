@@ -93,27 +93,8 @@ export default function HomeScreen({ navigation }) {
           // If the user is subscribed, send prompt request to the OpenAI API
           if (user.credits > 0) {
             console.log('Credits > 0')
-            const request = await fetch(apiUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey}`,
-              },
-              body: JSON.stringify({
-                prompt: prompt,
-                max_tokens: 1024,
-                temperature: 0.9,
-              }),
-            });
 
-            const response = await request.json();
-            console.log('Response');
-            console.log(response);
-
-            // selfHelp = {
-            //   question: prompt,
-            //   answer: response.choices[0].text,
-            // };
+            selfHelp = customAIResponse(prompt);
 
             // Create a new chat and save to supabase;
             // await saveChat(chatId, selfHelp);
