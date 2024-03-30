@@ -67,6 +67,7 @@ export default function SignupScreen({ navigation }) {
               email,
               password,
               subscribed: false,
+              credits: 3,
             },
           ])
           .select();
@@ -80,7 +81,7 @@ export default function SignupScreen({ navigation }) {
         // Save user to local storage
         await AsyncStorage.setItem(
           "user",
-          JSON.stringify({ ...data[0], credits: 3 })
+          JSON.stringify({ ...data[0] })
         );
 
         navigation.navigate("Subscription");

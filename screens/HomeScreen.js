@@ -11,14 +11,14 @@ import {
   Dimensions,
   Keyboard,
   SafeAreaView,
+  TextInput,
 } from "react-native";
-import { TextInput } from "react-native-gesture-handler";
 import { globalStyles } from "../components/styles/globalStyles";
 import { supabase } from "../utils/supabase";
 import uuid from "react-native-uuid";
-import selfHelpKeywords from "../utils/selfhelpkeywords";
+import selfHelpKeywords from "../utils/keywords";
 import { useFocusEffect } from "@react-navigation/native";
-import { getSignedInUser, customAIResponse, backendAIResponse } from "../utils/uitls";
+import { getSignedInUser, customAIResponse, useCredit } from "../utils/selfhelp";
 import CustomAlert from "../components/alerts/Alert";
 
 export default function HomeScreen({ navigation }) {
@@ -34,10 +34,6 @@ export default function HomeScreen({ navigation }) {
   const [alert, setAlert] = useState(false)
   const [alertTitle, setAlertTitle] = useState(null)
   const [alertMessage, setAlertMessage] = useState(null)
-
-  // Bypassed AI Url to use for demo
-  const apiKey = process.env.EXPO_PUBLIC_API_KEY;
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   // Send icon
   const sendIcon = "https://img.icons8.com/ios-glyphs/2F2D2C/30/sent.png";
@@ -85,21 +81,19 @@ export default function HomeScreen({ navigation }) {
         }
 
         if (containsSelfHelpKeywords) {
-          // Define self help variable
-          let selfHelp;
-          console.log(user);
-          console.log(prompt)
-
           // If the user is subscribed, send prompt request to the OpenAI API
           if (user.credits > 0) {
-            console.log('Credits > 0')
-
-            selfHelp = customAIResponse(prompt);
-
-            // Create a new chat and save to supabase;
-            // await saveChat(chatId, selfHelp);
+            // Send prompt request to the Googel Generative AI API
+            const selfHelp = await customAIResponse(prompt);
+            // Deduct a credit from the user's account
+            const editedUser = await useCredit(user.id, user.credits);
+            // Set the user in local storage with updated credits
+            await AsyncStorage.setItem("user", JSON.stringify(editedUser));
+            
+            // // Create a new chat and save to supabase;
+            await saveChat(chatId, selfHelp);
             // Navigate to the result screen and send the selfHelp variable
-            // navigation.navigate("Results", { result: [selfHelp], chatId });
+            navigation.navigate("Results", { result: [selfHelp], chatId });
             console.log("sent");
           } else {
             console.log('credits not enough');
@@ -126,8 +120,6 @@ export default function HomeScreen({ navigation }) {
     React.useCallback(() => {
       const fetchUser = async () => {
         const currentUser = await getSignedInUser();
-        console.log("Current user");
-        console.log(currentUser);
         setUser(currentUser);
       }
       fetchUser();

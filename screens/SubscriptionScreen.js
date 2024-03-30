@@ -21,6 +21,9 @@ const SubscriptionScreen = ({ navigation }) => {
   // Base URL
   const baseUrl = "https://spitfire-interractions.onrender.com/";
 
+  // Paystack Secret Key
+  const secretKey = process.env.EXPO_PUBLIC_PAYSTACK_API_KEY
+
   const [user, setUser] = useState(null);
   const checkIcon = "https://img.icons8.com/ios-filled/ffffff/50/ok--v1.png";
   const [plan, setPlan] = useState(null);
@@ -275,7 +278,7 @@ const SubscriptionScreen = ({ navigation }) => {
 
       <Paystack
         paystackKey="pk_test_f3072ef0f73e406f6f669a31617dc6f8e7a9fd86"
-        paystackSecretKey={import.meta.env.EXPO_PUBLIC_PAYSTACK_API_KEY}
+        paystackSecretKey={secretKey}
         billingEmail="johnnie.vehe@gmail.com"
         amount={"5000.00"}
         billingName="Team Artemis"

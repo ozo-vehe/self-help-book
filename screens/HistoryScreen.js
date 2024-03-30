@@ -11,6 +11,7 @@ import { supabase } from "../utils/supabase";
 import CustomHeader from "../components/CustomHeader";
 import { TouchableOpacity } from "react-native";
 import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HistoryScreen = ({ navigation }) => {
   const { height } = Dimensions.get("window");
@@ -31,19 +32,20 @@ const HistoryScreen = ({ navigation }) => {
       const getUser = async () => {
         setLoading(true);
         try {
-          const res = await fetch(
-            "https://spitfire-interractions.onrender.com/api/auth/@me"
-          );
-          const response = await res.json();
+          const res = await AsyncStorage.getItem("user");
+          console.log(res)
+          const user = JSON.parse(res);
+          console.log(user);
 
-          // Add this line to inspect the response
-          // console.log('Response:', response);
-          if (response) {
-            let { data } = await supabase
+          if (user) {
+            const { data, error } = await supabase
               .from("chats")
               .select("*")
-              .eq("user_id", response?.data?.id);
-            console.log(data?.length);
+              .eq("user_id", user.id);
+
+            console.log("Data and error messages");
+            console.log(data);
+            console.log(error);
             setData(data);
           }
 

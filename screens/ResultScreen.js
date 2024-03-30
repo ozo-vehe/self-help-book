@@ -17,14 +17,14 @@ import { globalStyles } from "../components/styles/globalStyles";
 import { supabase } from "../utils/supabase";
 import { SafeAreaView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import selfHelpKeywords from "../utils/selfhelpkeywords";
-import { getSignedInUser } from "../utils/uitls";
+import selfHelpKeywords from "../utils/keywords";
+import { getSignedInUser, continueChat, useCredit } from "../utils/selfhelp";
 // import 'dotenv/config';
 
 const ResultScreen = ({ route, navigation }) => {
   const chatId = route.params.chatId;
   const [user, setUser] = useState(null);
-  const [data, setData] = useState(route.params.result);
+  const [chats, setData] = useState(route.params.result);
   const [prompt, setPrompt] = useState(null);
   const [loading, setLoading] = useState(false);
   // Alert states
@@ -33,48 +33,17 @@ const ResultScreen = ({ route, navigation }) => {
   const [success, setSuccess] = useState(false);
 
   const sendIcon = "https://img.icons8.com/ios-glyphs/2F2D2C/30/sent.png";
-  const baseUrl = "https://spitfire-interractions.onrender.com/";
-
-  // Bypassed AI Url to use for demo
-  const apiKey = process.env.EXPO_PUBLIC_API_KEY;
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const addNewChat = async (newChat) => {
     const { data: chats } = await supabase
       .from("chats")
       .select("chat")
       .eq("id", chatId);
+
     const { error } = await supabase
       .from("chats")
       .update({ chat: [...chats[0].chat, newChat] })
       .eq("id", chatId);
-  };
-
-
-  const customAi = async () => {
-    const request = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        max_tokens: 1024,
-        temperature: 0.9,
-      }),
-    });
-
-    const response = await request.json();
-
-    const selfHelp = {
-      question: prompt,
-      answer: response.choices[0].text,
-    };
-    console.log("Cusotom");
-    console.log(selfHelp);
-
-    return selfHelp;
   };
 
   const sendPrompt = async () => {
@@ -88,7 +57,7 @@ const ResultScreen = ({ route, navigation }) => {
           prompt.toLowerCase().includes(keyword.toLowerCase())
         );
         // Check if the user has any credits left
-        if (user.credits <= 0 && user.subscribed === false) {
+        if (user.credits <= 0) {
           Alert.alert(
             "Sorry",
             "You have no credits left, please buy more credits to continue using the app",
@@ -108,85 +77,25 @@ const ResultScreen = ({ route, navigation }) => {
         }
 
         if (containsSelfHelpKeywords) {
-          // Set the self help variable
-          let selfHelp;
-          // Send prompt request to the chatgpt API using the backend API
-          if (user.subscribed === false) {
-            const req = await fetch(`${baseUrl}/api/chat/completions`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                history: data,
-                user_input: prompt,
-              }),
-            });
-            console.log(req);
-            const response = await req.json();
+          console.log("Contains self help keywords");
+          // Send prompt request to the Google Generative AI API and get response
+          const newAnswer = await continueChat(chats, prompt);
 
-            if (
-              response.content &&
-              response.content ==
-                "The server is experiencing a high volume of requests. Please try again later."
-            ) {
-              Alert.alert(
-                "Sorry",
-                "The server is experiencing a high volume of requests. Please try again later.",
-                [
-                  {
-                    text: "Contiue with alternative",
-                    onPress: async () => {
-                      selfHelp = await customAi();
-                      console.log(selfHelp);
-                      // Create a new chat and save to supabase;
-                      await addNewChat(selfHelp);
-                      const currentCredits = user.credits - 1;
-                      setUser({ ...user, credits: currentCredits });
-                      setData([...data, selfHelp]);
-                      console.log("sent");
-                    },
-                  },
-                  {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel",
-                  },
-                ]
-              );
-              return;
-            } else if (
-              response.message &&
-              response.message.includes("Invalid request")
-            ) {
-              Alert.alert("Sorry, invalid request");
-              return;
-            } else {
-              console.log(response);
-              // Create a response variable called selfHelp to hold both the question and the result
-              selfHelp = {
-                question: prompt,
-                answer: response.message,
-              };
-              console.log("Line 179");
-              console.log(selfHelp);
-              // Create a new chat and save to supabase;
-              await addNewChat(selfHelp);
-              const currentCredits = user.credits - 1;
-              setUser({ ...user, credits: currentCredits });
-              setData([...data, selfHelp]);
-              console.log("sent");
-            }
-          } else if (user.subscribed === true) {
-            selfHelp = await customAi();
+          const selfHelp = {
+            question: prompt,
+            answer: newAnswer,
+          };
+          console.log(selfHelp);
 
-            // Create a new chat and save to supabase;
-            await addNewChat(selfHelp);
-            const currentCredits = user.credits - 1;
-            setUser({ ...user, credits: currentCredits });
-            setData([...data, selfHelp]);
-            console.log("sent");
-          }
+          // Create a new chat and save to supabase;
+          await addNewChat(selfHelp);
+
+          const editedUser = await useCredit(user.id, user.credits);
+          // Set the user in local storage with updated credits
+          await AsyncStorage.setItem("user", JSON.stringify(editedUser));
+
+          setData([...chats, selfHelp]);
+          console.log("sent");
         } else {
           // Display a response for non-self-help questions
           const nonSelfHelpResponse =
@@ -206,7 +115,14 @@ const ResultScreen = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    getSignedInUser();
+    const storedUser = async () => {
+      const user = await getSignedInUser();
+      console.log("Result getting stored users...");
+      console.log(user);
+      setUser(user);
+    };
+
+    storedUser();
   }, []);
 
   return (
@@ -215,11 +131,11 @@ const ResultScreen = ({ route, navigation }) => {
       <CustomHeader title="Result" showIcon={false} />
 
       <View style={styles.resultContainer}>
-        {data.length > 0 ? (
+        {chats.length > 0 ? (
           <FlatList
-            data={data}
+            data={chats}
             showsVerticalScrollIndicator={false}
-            keyExtractor={(item) => data.indexOf(item).toString()}
+            keyExtractor={(item) => chats.indexOf(item).toString()}
             renderItem={({ item }) => <ResultCard result={item} />}
           />
         ) : (

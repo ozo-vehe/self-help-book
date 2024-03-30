@@ -1,19 +1,26 @@
-import React from 'react';
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useFonts, Sora_400Regular, Sora_300Light, } from "@expo-google-fonts/sora";
+import {
+  useFonts,
+  Sora_400Regular,
+  Sora_300Light,
+} from "@expo-google-fonts/sora";
+import Markdown from "react-native-markdown-display";
 
 // Pass a prop called result and category to this component
 // the category refers to either a question or a response to the question
-const ResultCard = ({result}) => {
+const ResultCard = ({ result }) => {
   const [fontsLoaded, fontError] = useFonts({ Sora_400Regular, Sora_300Light });
 
   return (
     <View style={styles.container}>
       <Text style={styles.question}>{result.question}</Text>
-      <Text style={styles.answer}>{result.answer.trim()}</Text>
+      <View style={styles.answer}>
+        <Markdown style={markdownStyles}>{result.answer}</Markdown>
+      </View>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -24,7 +31,7 @@ const styles = StyleSheet.create({
   },
   question: {
     borderWidth: 1,
-    borderColor: '#bababa',
+    borderColor: "#bababa",
     fontSize: 13,
     fontWeight: "600",
     color: "#2F2D2C",
@@ -32,17 +39,23 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 4,
     marginBottom: 10,
-    fontFamily: 'Sora_400Regular',
+    fontFamily: "Sora_400Regular",
   },
   answer: {
-    fontFamily: 'Sora_300Light',
-    fontSize: 12,
-    lineHeight: 18,
-    color: "#F5F5F5",
+    height: "auto",
     backgroundColor: "#C67C4E",
-    padding: 15,
+    padding: 10,
     borderRadius: 4,
-  }
-})
+  },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    color: "#F5F5F5",
+    fontFamily: "Sora_300Light",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+});
 
 export default ResultCard;
