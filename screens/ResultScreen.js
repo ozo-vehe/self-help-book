@@ -27,10 +27,6 @@ const ResultScreen = ({ route, navigation }) => {
   const [chats, setData] = useState(route.params.result);
   const [prompt, setPrompt] = useState(null);
   const [loading, setLoading] = useState(false);
-  // Alert states
-  const [warning, setWarning] = useState(false);
-  const [error, setError] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const sendIcon = "https://img.icons8.com/ios-glyphs/2F2D2C/30/sent.png";
 
@@ -57,7 +53,7 @@ const ResultScreen = ({ route, navigation }) => {
           prompt.toLowerCase().includes(keyword.toLowerCase())
         );
         // Check if the user has any credits left
-        if (user.credits <= 0) {
+        if (user.credits <= 0 && !user.subscribed) {
           Alert.alert(
             "Sorry",
             "You have no credits left, please buy more credits to continue using the app",
@@ -81,16 +77,17 @@ const ResultScreen = ({ route, navigation }) => {
           // Send prompt request to the Google Generative AI API and get response
           const newAnswer = await continueChat(chats, prompt);
 
+          // Deduct a credit from the user
+          const editedUser = await useCredit(user.id, user.credits);
+
           const selfHelp = {
             question: prompt,
             answer: newAnswer,
           };
-          console.log(selfHelp);
 
           // Create a new chat and save to supabase;
           await addNewChat(selfHelp);
 
-          const editedUser = await useCredit(user.id, user.credits);
           // Set the user in local storage with updated credits
           await AsyncStorage.setItem("user", JSON.stringify(editedUser));
 
@@ -108,6 +105,7 @@ const ResultScreen = ({ route, navigation }) => {
       }
     } catch (error) {
       console.log(error);
+      Alert.alert(`${error}`)
     } finally {
       setPrompt(null);
       setLoading(false);
@@ -117,8 +115,6 @@ const ResultScreen = ({ route, navigation }) => {
   useEffect(() => {
     const storedUser = async () => {
       const user = await getSignedInUser();
-      console.log("Result getting stored users...");
-      console.log(user);
       setUser(user);
     };
 

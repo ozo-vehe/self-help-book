@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   Image,
   Pressable,
@@ -7,19 +7,17 @@ import {
   View,
   SafeAreaView,
   Text,
+  Alert
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import CustomHeader from "../components/CustomHeader";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Paystack, paystackProps } from "react-native-paystack-webview";
-import { Alert } from "react-native";
 import { supabase } from "../utils/supabase";
 
 const SubscriptionScreen = ({ navigation }) => {
   // Paystack
   const paystackWebViewRef = useRef(paystackProps.PayStackRef);
-  // Base URL
-  const baseUrl = "https://spitfire-interractions.onrender.com/";
 
   // Paystack Secret Key
   const secretKey = process.env.EXPO_PUBLIC_PAYSTACK_API_KEY
@@ -39,12 +37,10 @@ const SubscriptionScreen = ({ navigation }) => {
 
   // get signed in user
   const getUser = async () => {
-    const asyncUser = await AsyncStorage.getItem("user");
-    const subscribed = JSON.parse(asyncUser).subscribed;
-
-    const req = await fetch(`${baseUrl}/api/auth/@me`);
-    const savedUser = await req.json();
-    setUser({ ...savedUser.data, subscribed });
+    const storedUser = await AsyncStorage.getItem("user");
+    const user = JSON.parse(storedUser);
+    setUser({ ...user });
+    console.log("Subscription User...")
   };
 
   useFocusEffect(
@@ -229,22 +225,12 @@ const SubscriptionScreen = ({ navigation }) => {
                     fontFamily: "Sora_400Regular",
                   }}
                 >
-                  $5/Month
+                  $5/100 Credits
                 </Text>
               </View>
             </Pressable>
           </View>
 
-          {/* Subsscription button */}
-          {/* {plan ? (
-              <TouchableOpacity onPress={handleContinue} >
-                <Text style={styles.buttonText}>Continue</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={[styles.button, {backgroundColor: `${plan ? '#C67C4E':'#E2BDA6'}`, justifyContent:'center', alignItems:'center'}]}>
-              <Text style={styles.buttonText}>Continue</Text>
-              </View>
-            )} */}
           {plan ? (
             <TouchableOpacity style={styles.button} onPress={handleContinue}>
               <Text
@@ -286,20 +272,21 @@ const SubscriptionScreen = ({ navigation }) => {
         onCancel={(e) => {
           // handle response here
           console.log(e);
+          Alert.alert(`${e}`)
         }}
         onSuccess={async (res) => {
           // handle response here
           console.log(res);
           if (res.status === "success") {
             console.log("success");
-            setUser({ ...user, subscribed: true });
+            setUser({ ...user, credits: 100 });
             await AsyncStorage.setItem(
               "user",
-              JSON.stringify({ ...user, subscribed: true })
+              JSON.stringify({ ...user, credits: 100 })
             );
             const { error } = await supabase
               .from("users")
-              .update({ subscribed: true })
+              .update({ credits: 100 })
               .eq("id", user.id);
             await AsyncStorage.getItem("user");
             navigation.navigate("Main");

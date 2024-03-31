@@ -20,6 +20,7 @@ import selfHelpKeywords from "../utils/keywords";
 import { useFocusEffect } from "@react-navigation/native";
 import { getSignedInUser, customAIResponse, useCredit } from "../utils/selfhelp";
 import CustomAlert from "../components/alerts/Alert";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen({ navigation }) {
   // Get the height and width of the mobile device
@@ -40,11 +41,10 @@ export default function HomeScreen({ navigation }) {
 
   // Function to create a new chat
   const saveChat = async (id, newChat) => {
-    const { data, error } = await supabase
+    await supabase
       .from("chats")
       .insert([{ id: id, chat: [newChat], user_id: user.id }])
       .select();
-    console.log(data);
   };
 
 
@@ -61,7 +61,7 @@ export default function HomeScreen({ navigation }) {
         );
 
         // Check if the user has any credits left
-        if (user.credits <= 0 && user.subscribed === false) {
+        if (user.credits <= 0) {
           Alert.alert(
             "Sorry",
             "You have no credits left, please buy more credits to continue using the app",
@@ -100,7 +100,7 @@ export default function HomeScreen({ navigation }) {
           }
         } else {
           // Display a response for non-self-help questions
-          const nonSelfHelpResponse = "We can only provide answer to self help related questions.";
+          const nonSelfHelpResponse = "We can only provide answer to questions related to self help and improvement.";
 
           Alert.alert("Sorry", nonSelfHelpResponse);
         }
@@ -109,6 +109,7 @@ export default function HomeScreen({ navigation }) {
       }
     } catch (error) {
       console.log(`error: ${error}`);
+      Alert.alert("Error", `${error}`);
     } finally {
       console.log(user);
       setPrompt(null);

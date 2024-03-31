@@ -22,7 +22,6 @@ export const customAIResponse = async (prompt) => {
   const resp = result.response;
 
   const text = resp.text();
-  console.log(text);
 
   const selfHelp = {
     question: prompt,
@@ -67,5 +66,5 @@ export const useCredit = async (id, userCredits) => {
     .eq("id", id)
     .select();
 
-  return data ? data : error;
+  return data ? data[0] : error;
 };

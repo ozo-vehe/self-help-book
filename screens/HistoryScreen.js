@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Text,
   Dimensions,
+  Alert,
 } from "react-native";
 import { supabase } from "../utils/supabase";
 import CustomHeader from "../components/CustomHeader";
@@ -20,9 +21,7 @@ const HistoryScreen = ({ navigation }) => {
 
   // Get details of the history item and pass it to the result screen
   const historyDetails = (item) => {
-    console.log(item);
     const { chat, id: chatId } = item;
-    console.log(item.id);
     navigation.navigate("Results", { result: chat, chatId });
   };
 
@@ -33,25 +32,21 @@ const HistoryScreen = ({ navigation }) => {
         setLoading(true);
         try {
           const res = await AsyncStorage.getItem("user");
-          console.log(res)
           const user = JSON.parse(res);
-          console.log(user);
 
           if (user) {
-            const { data, error } = await supabase
+            const { data } = await supabase
               .from("chats")
               .select("*")
               .eq("user_id", user.id);
 
-            console.log("Data and error messages");
-            console.log(data);
-            console.log(error);
             setData(data);
           }
 
           // setLoading(false);
         } catch (error) {
           console.error("Error logging out", error);
+          Alert.alert("Error:", `${error}`)
         }
         setLoading(false);
       };

@@ -66,7 +66,6 @@ export default function SignupScreen({ navigation }) {
               name,
               email,
               password,
-              subscribed: false,
               credits: 3,
             },
           ])

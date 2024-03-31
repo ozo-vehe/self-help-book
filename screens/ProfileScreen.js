@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Image, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native";
 import { Text, View } from "react-native";
 import CustomHeader from "../components/CustomHeader";
@@ -13,20 +13,13 @@ const ProfileScreen = ({ navigation }) => {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        "https://spitfire-interractions.onrender.com/api/auth/logout"
-      );
-      const response = await res.json();
-      if (response.message == "success") {
-        navigation.navigate("Login");
-      }
-
-      // Add this line to inspect the response
-      console.log("Response:", response);
+      await AsyncStorage.clear();
+      navigation.navigate("Login");
 
       setLoading(false);
     } catch (error) {
       console.log("Error logging out", error);
+      Alert.alert("Error:", `${error}`)
     }
     setLoading(false);
   };
@@ -34,7 +27,6 @@ const ProfileScreen = ({ navigation }) => {
   useEffect(() => {
     const getUser = async () => {
       const user = await AsyncStorage.getItem("user");
-      console.log(JSON.parse(user));
       setUser(JSON.parse(user));
     };
     getUser();

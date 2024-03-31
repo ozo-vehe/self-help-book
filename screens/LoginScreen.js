@@ -13,14 +13,12 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../utils/supabase";
 
 
 export default function LoginScreen({ navigation }) {
-  const { height } = Dimensions.get("window");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,11 +38,8 @@ export default function LoginScreen({ navigation }) {
           .select('*')
           .eq('email', email)
           .eq('password', password);
-        console.log(data);
 
         if (data) {
-          // Login successful
-          console.log("Login successful", data);
           // Save user for easy retrieval
           AsyncStorage.setItem("user", JSON.stringify({...data[0]}));
           // Redirect users based on subscription status
